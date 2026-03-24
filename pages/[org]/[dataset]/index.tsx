@@ -76,7 +76,7 @@ export default function DatasetPage({ dataset }): JSX.Element {
                       <div className="flex flex-col gap-4">
                         <div>
                           <h2 className="text-2xl font-semibold text-zinc-900">
-                            Resources
+                            Dataset contents
                           </h2>
                           <p className="mt-2 text-sm text-stone-500">
                             Explore files, metadata, and inline previews without leaving the dataset page.
