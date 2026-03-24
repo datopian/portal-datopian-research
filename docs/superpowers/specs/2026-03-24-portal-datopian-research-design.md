@@ -24,12 +24,26 @@ Customise the existing PortalJS frontend (forked from the UAE Ministry of Invest
 
 ## SEO / Meta (`next-seo.config.js`)
 
-| Field | Old value | New value |
+`next-seo.config.js` uses named exports that are then composed into a default export object. Update the following named export constants:
+
+| Named export | Old value | New value |
 |---|---|---|
 | `siteTitle` | `"PortalJS Open Data Portal"` | `"PortalJS Research Data Portal"` |
-| `title` | `"PortalJS"` | `"PortalJS"` |
 | `description` | generic open data copy | `"Discover and explore academic and scientific datasets. Search, preview, and analyse open research data powered by PortalJS."` |
-| `keywords` | open data keywords | `"PortalJS, research data, academic datasets, open science, data portal, datopian"` |
+
+Also update `additionalMetaTags[0].content` (the `keywords` meta tag):
+- New value: `"PortalJS, research data, academic datasets, open science, data portal, datopian"`
+
+The `siteTitle` constant is referenced by the default export's `defaultTitle`, `openGraph.siteTitle`, and `openGraph.site_name` — those update automatically since they reference the constant.
+
+---
+
+## Logo (`/images/moi-logo.svg` → `/images/logos/MainLogo.svg`)
+
+The UAE Ministry of Investment logo is referenced in two places. Both must be updated:
+
+1. `components/home/heroSectionLight/index.tsx` — `<Image src="/images/moi-logo.svg" ...>` → `src="/images/logos/MainLogo.svg"`, `alt="PortalJS Research Data Portal"`
+2. `themes/lighter/header.tsx` line 14 — `const portalLogo = "/images/moi-logo.svg"` → `"/images/logos/MainLogo.svg"`
 
 ---
 
@@ -37,8 +51,6 @@ Customise the existing PortalJS frontend (forked from the UAE Ministry of Invest
 
 | Element | Old | New |
 |---|---|---|
-| Logo `src` | `/images/moi-logo.svg` | `/images/logos/MainLogo.svg` |
-| Logo `alt` | `"UAE Ministry of Investment"` | `"PortalJS Research Data Portal"` |
 | Headline | `"UAE Investment Intelligence"` | `"Research Data Intelligence"` |
 | Accent word | `"Intelligence"` | `"Intelligence"` (unchanged) |
 | Subtitle | trade/finance copy | `"Explore academic and scientific datasets. Ask anything in plain English."` |
@@ -54,7 +66,7 @@ const SUGGESTED_PROMPTS = [
 ];
 ```
 
-Remove the `chartData` prop from `HeroSectionLight` — it is no longer passed from the homepage.
+Remove the `chartData` prop from the component signature — it is no longer passed from the homepage.
 
 ---
 
@@ -71,6 +83,9 @@ Remove the `chartData` prop from `HeroSectionLight` — it is no longer passed f
 - Pass `datasets` prop to `FeaturedDatasets`
 
 ### New section order
+
+Note: `FeaturedStoriesSection` currently sits at position 2 (immediately after the hero). It moves to position 4 (last).
+
 ```tsx
 <HeroSectionLight stats={stats} />
 <FeaturedDatasets datasets={datasets} />
@@ -78,20 +93,31 @@ Remove the `chartData` prop from `HeroSectionLight` — it is no longer passed f
 <FeaturedStoriesSection stories={stories} />
 ```
 
+The `getServerSideProps` `datasets` fetch (`limit: 5`) is unchanged — `FeaturedDatasets` slices to 4 internally.
+
 ---
 
 ## New Component: `components/home/FeaturedDatasets.tsx`
 
 A new section component that renders a grid of `DatasetCard` components.
 
-**Props:** `{ datasets: Dataset[] }`
+**Props:** `{ datasets: Dataset[] }` — import `Dataset` from `"@portaljs/ckan"`.
+
+**Imports needed:**
+```ts
+import { Dataset } from "@portaljs/ckan";
+import DatasetCard from "@/components/dataset/search/DatasetCard";
+import Link from "next/link";
+```
 
 **Structure:**
 - Section header: "Featured Datasets" (h2, same style as `MainSection`)
 - Subheading: "A selection of open research datasets available on this portal."
 - "View all datasets →" link to `/search`
 - 2-column grid (`grid grid-cols-1 md:grid-cols-2 gap-4`) of `DatasetCard` components
-- Renders at most 4 datasets (slice first 4 from the prop)
+- Renders at most 4 datasets: `datasets.slice(0, 4)`
+
+Note: `DatasetCard` is a horizontal list-item layout (thumbnail + content columns). It renders functionally in a grid. This is acceptable for the demo.
 
 ---
 
@@ -105,13 +131,9 @@ Update the subtitle text:
 
 ## Types (`types/chartData.ts`)
 
-Remove UAE-specific types:
-- `ChartData`
-- `MonthlyPoint`
-- `TradePartner`
-- `GovtFinancePoint`
+No changes to this file. `ChartData`, `MonthlyPoint`, `TradePartner`, and `GovtFinancePoint` are still imported by `components/home/visualizationsCarousel/index.tsx`, which is kept in the codebase (only removed from the homepage JSX, not deleted). Deleting these types would break that file.
 
-Keep `PlotModule` — it is referenced by story cover infrastructure and the visualisations carousel component.
+`PlotModule` is also kept unchanged.
 
 ---
 
@@ -119,7 +141,7 @@ Keep `PlotModule` — it is referenced by story cover infrastructure and the vis
 
 Replace the two UAE stories with two placeholder academic research stories. Stories are prose-only (no embedded `<Chart>` components).
 
-### File changes
+### Story file changes
 
 | Old file | New file |
 |---|---|
@@ -129,6 +151,25 @@ Replace the two UAE stories with two placeholder academic research stories. Stor
 | `content/stories/the-world-comes-to-uae.cover.ts` | `content/stories/data-for-health.cover.ts` |
 | `public/images/story-covers/beyond-oil.svg` | `public/images/story-covers/open-science-rising.svg` |
 | `public/images/story-covers/the-world-comes-to-uae.svg` | `public/images/story-covers/data-for-health.svg` |
+
+### `pages/stories/[slug].tsx` — required updates (build-critical)
+
+This file has static imports of the old cover files at the top level (lines 9–10). Deleting the old `.cover.ts` files without updating this file **will break the build**.
+
+**Remove these lines:**
+```ts
+import * as beyondOilCovers from "../../content/stories/beyond-oil.cover";
+import * as worldComesCovers from "../../content/stories/the-world-comes-to-uae.cover";
+```
+
+**Remove the `STORY_COMPONENTS` constant** (lines 15–32) and the `storyComponents` variable that references it (line 69: `const storyComponents = STORY_COMPONENTS[slug] ?? {}`).
+
+**Update the MDXRemote usage** (line 91) to use an empty components object:
+```tsx
+<MDXRemote {...mdxSource} components={{}} />
+```
+
+**Fix the related datasets link** (line 101): change `/@moi-demo/${slug}` to `/@datopian-research/${slug}`.
 
 ### Story 1: "The Rise of Open Science"
 
@@ -160,16 +201,19 @@ relatedDatasets: []
 
 ### Cover `.ts` files
 
-Both `.cover.ts` files export no-op stubs (no `coverSpec`, no `coverCsvUrl`). The story page handles missing exports gracefully since `<Chart>` is not used in the MDX.
+Both `.cover.ts` files export empty stubs. The story page no longer references cover exports.
 
 ```ts
 // content/stories/open-science-rising.cover.ts
+export {};
+
+// content/stories/data-for-health.cover.ts
 export {};
 ```
 
 ### Cover SVGs
 
-Simple blue-on-white placeholder SVGs (no generated chart). Each SVG is a 800x400 rectangle with a subtle blue gradient background and the story title as centred text.
+Simple blue-on-white placeholder SVGs (no generated chart). Each SVG is an 800x400 rectangle with a subtle blue gradient background and the story title as centred text. Committed directly to `public/images/story-covers/` — no need to run `generate-covers`.
 
 ---
 
@@ -180,3 +224,4 @@ Simple blue-on-white placeholder SVGs (no generated chart). Each SVG is a 800x40
 - Adding real research chart data to stories
 - Replacing topic icons (these come from CKAN and will update when the backend is populated)
 - Changing the AI assistant (queryless) behaviour
+- Deleting `components/home/visualizationsCarousel/` (kept for potential future use)
