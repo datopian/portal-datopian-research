@@ -1,46 +1,98 @@
-import { FormEvent, useState } from "react";
-import { useRouter } from "next/router";
-import { useTheme } from "@/components/theme/theme-provider";
+import { FormEvent, useState, useEffect, useRef } from "react";
 import { MagnifyingGlassIcon } from "@heroicons/react/20/solid";
 
+const PLACEHOLDERS = [
+  "Show datasets published in the last year...",
+  "What climate datasets are available?",
+  "Find datasets about public health...",
+  "Which organisations have the most datasets?",
+  "Show me open science data...",
+  "What research datasets can I explore?",
+];
+
+const TYPING_SPEED = 45;
+const DELETING_SPEED = 25;
+const PAUSE_AFTER_TYPE = 2000;
+const PAUSE_AFTER_DELETE = 400;
+
 const SearchForm: React.FC = () => {
-  const router = useRouter();
   const [searchQuery, setSearchQuery] = useState("");
-  const { theme } = useTheme();
-  const { styles } = theme;
+  const [placeholder, setPlaceholder] = useState("");
+  const [isFocused, setIsFocused] = useState(false);
+
+  const indexRef = useRef(0);
+  const charRef = useRef(0);
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const isFocusedRef = useRef(false);
+
+  useEffect(() => {
+    isFocusedRef.current = isFocused;
+  }, [isFocused]);
+
+  useEffect(() => {
+    const tick = (phase: "typing" | "pausing" | "deleting" | "waiting") => {
+      if (isFocusedRef.current) {
+        timeoutRef.current = setTimeout(() => tick(phase), 200);
+        return;
+      }
+
+      const current = PLACEHOLDERS[indexRef.current];
+
+      if (phase === "typing") {
+        charRef.current += 1;
+        setPlaceholder(current.slice(0, charRef.current));
+        if (charRef.current < current.length) {
+          timeoutRef.current = setTimeout(() => tick("typing"), TYPING_SPEED);
+        } else {
+          timeoutRef.current = setTimeout(() => tick("deleting"), PAUSE_AFTER_TYPE);
+        }
+      } else if (phase === "deleting") {
+        charRef.current -= 1;
+        setPlaceholder(current.slice(0, charRef.current));
+        if (charRef.current > 0) {
+          timeoutRef.current = setTimeout(() => tick("deleting"), DELETING_SPEED);
+        } else {
+          indexRef.current = (indexRef.current + 1) % PLACEHOLDERS.length;
+          timeoutRef.current = setTimeout(() => tick("typing"), PAUSE_AFTER_DELETE);
+        }
+      }
+    };
+
+    timeoutRef.current = setTimeout(() => tick("typing"), 600);
+    return () => { if (timeoutRef.current) clearTimeout(timeoutRef.current); };
+  }, []);
 
   const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
-    if (e) {
-      e.preventDefault();
-    }
-    router.push({
-      pathname: "/search",
-      query: { q: searchQuery },
-    });
+    e.preventDefault();
+    const message = searchQuery.trim();
+    if (!message) return;
+    window.dispatchEvent(new CustomEvent("queryless:open", { detail: { message } }));
+    setSearchQuery("");
   };
 
   return (
     <form
-      onSubmit={(e) => handleSubmit(e)}
-      className="items-center flex flex-row gap-4"
+      onSubmit={handleSubmit}
+      className="flex w-full rounded-2xl border border-gray-200 overflow-hidden shadow-md hover:shadow-lg transition-shadow bg-white"
     >
       <input
         id="search-form-input"
-        type="search"
+        type="text"
         name="search"
-        onChange={(e) => {
-          setSearchQuery(e.target.value);
-        }}
-        placeholder="Search datasets..."
-        aria-label="Search datasets"
-        className={`w-3/4  rounded-[10px] border-1 bg-white  py-3 px-4 md:py-4 md:px-4 border leading-none placeholder-gray-500 ${styles.shadowMd}`}
+        value={searchQuery}
+        onChange={(e) => setSearchQuery(e.target.value)}
+        onFocus={() => setIsFocused(true)}
+        onBlur={() => setIsFocused(false)}
+        placeholder={isFocused ? "" : placeholder}
+        aria-label="Ask AI assistant"
+        className="flex-1 px-6 py-4 text-[15px] text-gray-800 placeholder-gray-400 outline-none"
       />
       <button
         type="submit"
-        className={`text-lg border-b-[4px] border-accent rounded-[10px] ${styles.bgDark}  uppercase font-medium px-3 py-3 md:px-10 md:py-4 leading-none lg:mt-0 ${styles.textLight} `}
+        className="bg-accent hover:bg-accent-600 transition-colors px-6 py-4 text-white font-semibold flex items-center gap-2 whitespace-nowrap"
       >
-        <MagnifyingGlassIcon width={24} className="sm:hidden" />
-        <span className="hidden sm:block">Search</span>
+        <MagnifyingGlassIcon width={18} />
+        <span className="hidden sm:inline">Ask AI</span>
       </button>
     </form>
   );

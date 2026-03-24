@@ -1,15 +1,29 @@
 import Link from "next/link";
+import { Dialog } from "@headlessui/react";
 import { Resource, Tag } from "@portaljs/ckan";
 import {
+  AcademicCapIcon,
   ArrowDownTrayIcon,
+  BeakerIcon,
   ChevronDownIcon,
   ChevronUpIcon,
+  ClipboardDocumentIcon,
+  CommandLineIcon,
+  ChevronDownIcon as DropdownChevronDownIcon,
+  FingerPrintIcon,
+  LinkIcon,
+  XMarkIcon,
 } from "@heroicons/react/20/solid";
 import { getTimeAgo } from "@/lib/utils";
 import { Dataset } from "@/schemas/dataset.interface";
 import { RiExternalLinkLine } from "react-icons/ri";
 import { useEffect, useRef, useState } from "react";
 import MarkdownRenderer from "@/components/_shared/MarkdownRenderer";
+import { generateMockDoi } from "@/lib/doi";
+import { url as siteUrl } from "@/next-seo.config";
+import { getBrowserOrigin, getDatasetStablePath } from "@/lib/dataset-links";
+import { formatDatasetCitation } from "@/lib/citation";
+import { formatDatasetApiSnippet } from "@/lib/api-access";
 
 function uniqueFormat(resources) {
   const formats = resources.map((item: Resource) => item.format);
@@ -21,9 +35,44 @@ export default function DatasetInfo({
 }: {
   dataset: Dataset;
 }) {
+  const citationStyles = [
+    { id: "apa", label: "APA" },
+    { id: "bibtex", label: "BibTeX" },
+  ] as const;
+  const accessStyles = [
+    { id: "curl", label: "curl" },
+    { id: "python", label: "Python" },
+    { id: "r", label: "R" },
+  ] as const;
   const [isTruncated, setIsTruncated] = useState(false);
   const [showFullDescription, setShowFullDescription] = useState(false);
+  const [isUsePanelOpen, setIsUsePanelOpen] = useState(false);
+  const [activeModal, setActiveModal] = useState<null | "stable-url" | "citation" | "api-access">(null);
+  const [copiedField, setCopiedField] = useState<string | null>(null);
+  const [citationStyle, setCitationStyle] =
+    useState<(typeof citationStyles)[number]["id"]>("apa");
+  const [accessStyle, setAccessStyle] =
+    useState<(typeof accessStyles)[number]["id"]>("curl");
   const textRef = useRef<HTMLParagraphElement>(null);
+  const usePanelRef = useRef<HTMLDivElement>(null);
+  const datasetLicense = dataset.license_title;
+  const datasetDoi = generateMockDoi(dataset.name);
+  const datasetDoiUrl = `https://doi.org/${datasetDoi}`;
+  const datasetUrl = `${getBrowserOrigin(
+    typeof window !== "undefined" ? window : undefined,
+    siteUrl
+  )}${getDatasetStablePath(dataset)}`;
+  const apiBaseUrl = process.env.NEXT_PUBLIC_DMS || siteUrl;
+  const datasetCitation = formatDatasetCitation(dataset, {
+    style: citationStyle,
+    stableUrl: datasetUrl,
+    doi: datasetDoi,
+  });
+  const primaryDownloadUrl = dataset.resources?.[0]?.url;
+  const datasetAccessSnippet = formatDatasetApiSnippet(dataset, {
+    style: accessStyle,
+    apiBaseUrl,
+  });
 
   const description =
     dataset.notes?.replace(/<\/?[^>]+(>|$)/g, "") || "No description";
@@ -43,8 +92,269 @@ export default function DatasetInfo({
     }
   }, [dataset.notes]);
 
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        usePanelRef.current &&
+        !usePanelRef.current.contains(event.target as Node)
+      ) {
+        setIsUsePanelOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
+  const copyValue = async (label: string, value?: string) => {
+    if (!value) return;
+
+    try {
+      await navigator.clipboard.writeText(value);
+      setCopiedField(label);
+      window.setTimeout(() => setCopiedField(null), 2000);
+    } catch (error) {
+      console.error(`Failed to copy ${label}`, error);
+    }
+  };
+
   return (
     <div className="flex flex-col">
+      <div className="mb-6 w-full" ref={usePanelRef}>
+        <div className="relative w-full">
+          <button
+            type="button"
+            onClick={() => setIsUsePanelOpen((open) => !open)}
+            className="inline-flex w-full items-center justify-between gap-2 rounded-xl bg-accent px-4 py-3 text-sm font-semibold text-white transition hover:bg-darkaccent"
+          >
+            <span className="inline-flex items-center gap-2">
+              <BeakerIcon className="h-4 w-4" />
+              Use this dataset
+            </span>
+            <DropdownChevronDownIcon className="h-4 w-4" />
+          </button>
+          {isUsePanelOpen ? (
+            <div className="absolute left-0 top-full z-20 mt-2 w-full overflow-hidden rounded-2xl border border-slate-200 bg-white py-2 shadow-xl">
+              {primaryDownloadUrl ? (
+                <Link
+                  href={primaryDownloadUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex w-full items-center gap-3 px-4 py-3 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
+                >
+                  <ArrowDownTrayIcon className="h-4 w-4 text-slate-400" />
+                  Download dataset
+                </Link>
+              ) : null}
+              <button
+                type="button"
+                onClick={() => {
+                  setActiveModal("api-access");
+                  setIsUsePanelOpen(false);
+                }}
+                className="flex w-full items-center gap-3 px-4 py-3 text-left text-sm font-medium text-slate-700 transition hover:bg-slate-50"
+              >
+                <CommandLineIcon className="h-4 w-4 text-slate-400" />
+                API access
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setActiveModal("citation");
+                  setIsUsePanelOpen(false);
+                }}
+                className="flex w-full items-center gap-3 px-4 py-3 text-left text-sm font-medium text-slate-700 transition hover:bg-slate-50"
+              >
+                <AcademicCapIcon className="h-4 w-4 text-slate-400" />
+                Cite this dataset
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  copyValue("doi", datasetDoi);
+                  setIsUsePanelOpen(false);
+                }}
+                className="flex w-full items-center gap-3 px-4 py-3 text-left text-sm font-medium text-slate-700 transition hover:bg-slate-50"
+              >
+                <FingerPrintIcon className="h-4 w-4 text-slate-400" />
+                {copiedField === "doi" ? "DOI copied" : "Copy DOI"}
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setActiveModal("stable-url");
+                  setIsUsePanelOpen(false);
+                }}
+                className="flex w-full items-center gap-3 px-4 py-3 text-left text-sm font-medium text-slate-700 transition hover:bg-slate-50"
+              >
+                <LinkIcon className="h-4 w-4 text-slate-400" />
+                Show stable URL
+              </button>
+            </div>
+          ) : null}
+        </div>
+      </div>
+      <Dialog
+        open={activeModal === "stable-url"}
+        onClose={() => setActiveModal(null)}
+        className="relative z-[1200]"
+      >
+        <div className="fixed inset-0 z-[1200] bg-black/30" aria-hidden="true" />
+        <div className="fixed inset-0 z-[1210] flex items-center justify-center p-4">
+          <Dialog.Panel className="w-full max-w-lg rounded-2xl bg-white p-6 shadow-2xl">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <Dialog.Title className="text-lg font-semibold text-zinc-900">
+                  Stable URL
+                </Dialog.Title>
+                <p className="mt-1 text-sm text-stone-500">
+                  Use this persistent dataset URL for sharing and referencing. Stable access like this supports the FAIR principles, especially making research outputs more findable and accessible.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setActiveModal(null)}
+                className="rounded-lg p-2 text-stone-500 transition hover:bg-stone-100 hover:text-stone-700"
+              >
+                <XMarkIcon className="h-5 w-5" />
+              </button>
+            </div>
+            <div className="mt-4 rounded-xl border border-slate-200 bg-slate-50 p-4">
+              <div className="break-all text-sm text-slate-700">{datasetUrl}</div>
+            </div>
+            <div className="mt-4 flex gap-2">
+              <button
+                type="button"
+                onClick={() => copyValue("stable-url", datasetUrl)}
+                className="inline-flex items-center gap-2 rounded-xl border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-accent hover:text-accent"
+              >
+                <ClipboardDocumentIcon className="h-4 w-4" />
+                {copiedField === "stable-url" ? "Copied" : "Copy stable URL"}
+              </button>
+            </div>
+          </Dialog.Panel>
+        </div>
+      </Dialog>
+      <Dialog
+        open={activeModal === "api-access"}
+        onClose={() => setActiveModal(null)}
+        className="relative z-[1200]"
+      >
+        <div className="fixed inset-0 z-[1200] bg-black/30" aria-hidden="true" />
+        <div className="fixed inset-0 z-[1210] flex items-center justify-center p-4">
+          <Dialog.Panel className="w-full max-w-2xl rounded-2xl bg-white p-6 shadow-2xl">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <Dialog.Title className="text-lg font-semibold text-zinc-900">
+                  API access
+                </Dialog.Title>
+                <p className="mt-1 text-sm text-stone-500">
+                  Use one of these starter snippets to access this dataset programmatically.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setActiveModal(null)}
+                className="rounded-lg p-2 text-stone-500 transition hover:bg-stone-100 hover:text-stone-700"
+              >
+                <XMarkIcon className="h-5 w-5" />
+              </button>
+            </div>
+            <div className="mt-4 flex flex-wrap gap-2">
+              {accessStyles.map((style) => (
+                <button
+                  key={style.id}
+                  type="button"
+                  onClick={() => setAccessStyle(style.id)}
+                  className={`rounded-full border px-3 py-1.5 text-sm font-medium transition ${
+                    accessStyle === style.id
+                      ? "border-accent bg-accent/10 text-accent"
+                      : "border-slate-200 text-slate-700 hover:border-slate-300 hover:bg-slate-50"
+                  }`}
+                >
+                  {style.label}
+                </button>
+              ))}
+            </div>
+            <div className="mt-4 rounded-xl border border-slate-200 bg-slate-950 p-4">
+              <pre className="whitespace-pre-wrap break-words text-sm text-slate-100">
+                <code>{datasetAccessSnippet}</code>
+              </pre>
+            </div>
+            <div className="mt-4 flex gap-2">
+              <button
+                type="button"
+                onClick={() => copyValue("api-access", datasetAccessSnippet)}
+                className="inline-flex items-center gap-2 rounded-xl border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-accent hover:text-accent"
+              >
+                <ClipboardDocumentIcon className="h-4 w-4" />
+                {copiedField === "api-access" ? "Copied" : "Copy snippet"}
+              </button>
+            </div>
+          </Dialog.Panel>
+        </div>
+      </Dialog>
+      <Dialog
+        open={activeModal === "citation"}
+        onClose={() => setActiveModal(null)}
+        className="relative z-[1200]"
+      >
+        <div className="fixed inset-0 z-[1200] bg-black/30" aria-hidden="true" />
+        <div className="fixed inset-0 z-[1210] flex items-center justify-center p-4">
+          <Dialog.Panel className="w-full max-w-2xl rounded-2xl bg-white p-6 shadow-2xl">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <Dialog.Title className="text-lg font-semibold text-zinc-900">
+                  Cite this dataset
+                </Dialog.Title>
+                <p className="mt-1 text-sm text-stone-500">
+                  Choose a citation format and copy a ready-to-use reference generated from this dataset&apos;s metadata.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setActiveModal(null)}
+                className="rounded-lg p-2 text-stone-500 transition hover:bg-stone-100 hover:text-stone-700"
+              >
+                <XMarkIcon className="h-5 w-5" />
+              </button>
+            </div>
+            <div className="mt-4 flex flex-wrap gap-2">
+              {citationStyles.map((style) => (
+                <button
+                  key={style.id}
+                  type="button"
+                  onClick={() => setCitationStyle(style.id)}
+                  className={`rounded-full border px-3 py-1.5 text-sm font-medium transition ${
+                    citationStyle === style.id
+                      ? "border-accent bg-accent/10 text-accent"
+                      : "border-slate-200 text-slate-700 hover:border-slate-300 hover:bg-slate-50"
+                  }`}
+                >
+                  {style.label}
+                </button>
+              ))}
+            </div>
+            <div className="mt-4 rounded-xl border border-slate-200 bg-slate-50 p-4">
+              <div className="whitespace-pre-wrap break-words text-sm text-slate-700">
+                {datasetCitation}
+              </div>
+            </div>
+            <div className="mt-4 flex gap-2">
+              <button
+                type="button"
+                onClick={() => copyValue("citation", datasetCitation)}
+                className="inline-flex items-center gap-2 rounded-xl border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-accent hover:text-accent"
+              >
+                <ClipboardDocumentIcon className="h-4 w-4" />
+                {copiedField === "citation" ? "Copied" : "Copy citation"}
+              </button>
+            </div>
+          </Dialog.Panel>
+        </div>
+      </Dialog>
       <div className="flex flex-col gap-y-3">
         {dataset.type === "visualization" && !!dataset.external_url && (
           <a
@@ -114,6 +424,36 @@ export default function DatasetInfo({
           Created:{" "}
           {dataset.metadata_created && getTimeAgo(dataset.metadata_created)}
         </span>
+        <div className="font-medium text-gray-500">
+          <div className="flex items-start gap-1">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              strokeWidth={1.5}
+              stroke="currentColor"
+              className="w-5 h-5 text-accent inline-block mt-0.5 flex-shrink-0"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M9 7.5h6M9 12h6m-6 4.5h3m-6.75 3h10.5A2.25 2.25 0 0 0 18 17.25V6.75A2.25 2.25 0 0 0 15.75 4.5H8.25A2.25 2.25 0 0 0 6 6.75v10.5A2.25 2.25 0 0 0 8.25 19.5Z"
+              />
+            </svg>
+            <div className="flex flex-col gap-1 min-w-0">
+              <span>DOI:</span>
+              <a
+                href={datasetDoiUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-accent hover:text-darkaccent flex items-center gap-1 break-all transition"
+              >
+                <RiExternalLinkLine className="w-4 h-4 flex-shrink-0" />
+                <span className="underline">{datasetDoi}</span>
+              </a>
+            </div>
+          </div>
+        </div>
         {dataset.source && dataset.source.length > 0 && (
           <div className="font-medium text-gray-500">
             <div className="flex items-start gap-1">
@@ -147,6 +487,42 @@ export default function DatasetInfo({
                     </a>
                   ))}
                 </div>
+              </div>
+            </div>
+          </div>
+        )}
+        {datasetLicense && (
+          <div className="font-medium text-gray-500">
+            <div className="flex items-start gap-1">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                strokeWidth={1.5}
+                stroke="currentColor"
+                className="w-5 h-5 text-accent inline-block mt-0.5 flex-shrink-0"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M9 12.75 11.25 15 15 9.75m5.25 2.25a8.25 8.25 0 11-16.5 0 8.25 8.25 0 0116.5 0Z"
+                />
+              </svg>
+              <div className="flex flex-col gap-1">
+                <span>License:</span>
+                {dataset.license_url ? (
+                  <a
+                    href={dataset.license_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-accent hover:text-darkaccent flex items-center gap-1 break-all transition"
+                  >
+                    <RiExternalLinkLine className="w-4 h-4 flex-shrink-0" />
+                    <span className="underline">{datasetLicense}</span>
+                  </a>
+                ) : (
+                  <span>{datasetLicense}</span>
+                )}
               </div>
             </div>
           </div>
@@ -206,7 +582,7 @@ export default function DatasetInfo({
           </span>
         ))}
       </div>
-      <span className="font-medium text-gray-500 inline">
+      <span className="mt-4 font-medium text-gray-500 inline">
         <div className="flex flex-wrap gap-x-2 items-center">
           <div>Export metadata as: </div>
           {metaFormats.map((item) => (

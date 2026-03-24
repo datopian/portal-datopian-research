@@ -3,6 +3,7 @@ import { Dataset } from "@portaljs/ckan";
 import MultipleResourcesCard from "../_shared/MultipleResourcesCard";
 import { resourceBgColors } from "../_shared/FormatsColors";
 import { getTimeAgo } from "@/lib/utils";
+import { generateMockDoi } from "@/lib/doi";
 
 export default function DatasetCard({
   dataset,
@@ -67,6 +68,7 @@ export default function DatasetCard({
   }
 
   const datasetName = dataset.name;
+  const datasetDoi = generateMockDoi(datasetName);
 
   return (
     <Link href={`/@${dataset.organization.name}/${datasetName}`} className="">
@@ -76,7 +78,14 @@ export default function DatasetCard({
           <h1 className="  font-semibold text-lg text-[#202020] break-words">
             {dataset.title || "No title"}
           </h1>
-
+          <div className="mb-2 text-xs text-slate-500">
+            <span className="mr-1 font-semibold uppercase tracking-[0.12em] text-slate-400">
+              DOI
+            </span>
+            <code className="rounded bg-slate-100 px-2 py-1 text-[11px] text-slate-700">
+              {datasetDoi}
+            </code>
+          </div>
           <p className="text-sm font-normal text-[#575757]  line-clamp-2  overflow-y-hidden mb-1">
             {dataset.notes?.replace(/<\/?[^>]+(>|$)/g, "") || "No description"}
           </p>

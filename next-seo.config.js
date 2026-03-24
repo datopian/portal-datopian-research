@@ -1,9 +1,9 @@
 /* eslint-disable import/no-anonymous-default-export */
 
-export const siteTitle = "PortalJS Open Data Portal";
+export const siteTitle = "PortalJS Research Data Portal";
 export const title = "PortalJS";
 export const description =
-  "Discover thousands of datasets, publish your own, and request data via Portal – an open data platform powered by PortalJS.";
+  "Discover and explore academic and scientific datasets. Search, preview, and analyse open research data powered by PortalJS.";
 
 export const url = "https://portaljs-cloud-frontend-template.vercel.app";
 export const imageUrl = `${url}/images/portaljs-frontend.png`;
@@ -38,7 +38,7 @@ export default {
   additionalMetaTags: [
     {
       name: "keywords",
-      content: "PortalJS, open data, datasets, data portal, Portal, datopian, frontend template",
+      content: "PortalJS, research data, academic datasets, open science, data portal, datopian",
     },
     {
       name: "author",

@@ -1,19 +1,14 @@
 import { GetServerSideProps } from "next";
 import DatasetInfo from "@/components/dataset/individualPage/DatasetInfo";
-import DatasetOverview from "@/components/dataset/individualPage/DatasetOverview";
 import DatasetNavCrumbs from "@/components/dataset/individualPage/NavCrumbs";
 import ResourcesList from "@/components/dataset/individualPage/ResourcesList";
-import ActivityStream from "@/components/_shared/ActivityStream";
 import Layout from "@/components/_shared/Layout";
-import Tabs from "@/components/_shared/Tabs";
-import { CKAN } from "@portaljs/ckan";
 import styles from "styles/DatasetInfo.module.scss";
 import { getDataset } from "@/lib/queries/dataset";
 import HeroSection from "@/components/_shared/HeroSection";
 import { DatasetPageStructuredData } from "@/components/schema/DatasetPageStructuredData";
 
 export const getServerSideProps: GetServerSideProps = async (context) => {
-  const ckan = new CKAN(process.env.NEXT_PUBLIC_DMS);
   const datasetName = context.params?.dataset as string;
   const orgName = context.params?.org as string;
 
@@ -30,12 +25,6 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
         notFound: true,
       };
     }
-    const activityStream = await ckan.getDatasetActivityStream(datasetName);
-    dataset = {
-      ...dataset,
-      activity_stream: activityStream,
-    };
-
     if (!dataset.organization || "@" + dataset.organization.name !== orgName) {
       return {
         notFound: true,
@@ -55,37 +44,6 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
 };
 
 export default function DatasetPage({ dataset }): JSX.Element {
-  const tabs = [
-    ...(dataset.type != "visualization"
-      ? [
-          {
-            id: "resources",
-            content: (
-              <ResourcesList
-                resources={dataset?.resources}
-                orgName={dataset.organization ? dataset.organization.name : ""}
-                datasetName={dataset.name}
-              />
-            ),
-            title: "Resources",
-          },
-        ]
-      : []),
-    {
-      id: "information",
-      content: <DatasetOverview dataset={dataset} />,
-      title: "Info",
-    },
-    {
-      id: "activity-stream",
-      content: (
-        <ActivityStream
-          activities={dataset?.activity_stream ? dataset.activity_stream : []}
-        />
-      ),
-      title: "Activity Stream",
-    },
-  ];
   return (
     <>
       <DatasetPageStructuredData dataset={dataset} />
@@ -114,7 +72,23 @@ export default function DatasetPage({ dataset }): JSX.Element {
                 <main className={styles.main}>
                   <DatasetInfo dataset={dataset} />
                   <div>
-                    <Tabs items={tabs} />
+                    {dataset.type !== "visualization" ? (
+                      <div className="flex flex-col gap-4">
+                        <div>
+                          <h2 className="text-2xl font-semibold text-zinc-900">
+                            Resources
+                          </h2>
+                          <p className="mt-2 text-sm text-stone-500">
+                            Explore files, metadata, and inline previews without leaving the dataset page.
+                          </p>
+                        </div>
+                        <ResourcesList
+                          resources={dataset?.resources}
+                          orgName={dataset.organization ? dataset.organization.name : ""}
+                          datasetName={dataset.name}
+                        />
+                      </div>
+                    ) : null}
                   </div>
                 </main>
               )}

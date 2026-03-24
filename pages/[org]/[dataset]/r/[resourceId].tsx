@@ -22,8 +22,8 @@ const ExcelViewer = dynamic(
   { ssr: false }
 );
 
-const MapViewer = dynamic(
-  () => import("@portaljs/components").then((mod) => mod.Map),
+const GeoJsonMap = dynamic(
+  () => import("@/components/dataset/resource/GeoJsonMap"),
   { ssr: false }
 );
 
@@ -204,8 +204,8 @@ export default function ResourcePage({
                   <ExcelViewer url={resource.url} />
                 )}
                 {resourceFormat?.toLocaleLowerCase() == "geojson" && (
-                  <MapViewer
-                    layers={[{ data: resource.url, name: "Geojson" }]}
+                  <GeoJsonMap
+                    dataUrl={resource.url}
                     title={resource.name}
                   />
                 )}

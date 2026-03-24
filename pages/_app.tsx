@@ -1,4 +1,5 @@
 import "@portaljs/components/styles.css";
+import "leaflet/dist/leaflet.css";
 import "@/styles/globals.scss";
 import "@/styles/tabs.scss";
 

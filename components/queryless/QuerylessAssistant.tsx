@@ -24,6 +24,9 @@ type ChatMessage = {
   variant?: "default" | "context";
 };
 
+const QUERYLESS_WELCOME_MESSAGE =
+  "Hi, I'm Queryless 👋\n\nAsk questions in plain English. No SQL needed.\n\nTry things like:\n- \"What climate datasets are available?\"\n- \"Find datasets about public health.\"\n- \"Which organisations have the most datasets?\"\n- \"Show datasets published in the last year.\"\n\nI'm aware of the page you are browsing 👀";
+
 function getPageDirective(
   pathname: string,
   asPath: string
@@ -160,14 +163,14 @@ const AssistantMessageBody = memo(function AssistantMessageBody({
           isLocalLink(props.href) ? (
             <Link
               href={props.href || "/"}
-              className="underline text-sky-700 hover:text-sky-800"
+              className="underline text-accent-600 hover:text-accent-700"
             >
               {props.children}
             </Link>
           ) : (
             <a
               {...props}
-              className="underline text-sky-700 hover:text-sky-800"
+              className="underline text-accent-600 hover:text-accent-700"
               target="_blank"
               rel="noopener noreferrer"
             />
@@ -244,8 +247,7 @@ export default function QuerylessAssistant() {
     {
       id: "assistant-welcome",
       role: "assistant",
-      content:
-        "Hi, I’m Queryless 👋\n\nAsk questions in plain English. No SQL needed.\n\nTry things like:\n- “Are there any datasets about climate change?”\n- “What are the available groups?”\n- “Compare the top 10 by emissions.”\n- “Create a chart for this trend.”\n\nI’m aware of the page you are browsing 👀",
+      content: QUERYLESS_WELCOME_MESSAGE,
     },
   ]);
   const [input, setInput] = useState("");
@@ -262,6 +264,7 @@ export default function QuerylessAssistant() {
   const lastContextPathRef = useRef<string | null>(null);
   const lastContextMessageIdRef = useRef<string | null>(null);
   const hasExchangeSinceLastPageChangeRef = useRef(false);
+  const pendingAutoSendRef = useRef<string | null>(null);
 
   useEffect(() => {
     const override = window.localStorage.getItem(QUERYLESS_STORAGE_KEY);
@@ -295,6 +298,18 @@ export default function QuerylessAssistant() {
       document.removeEventListener("keydown", closeOnEscape);
     };
   }, [isOpen]);
+
+  useEffect(() => {
+    const handleOpen = (event: Event) => {
+      const message = (event as CustomEvent<{ message: string }>).detail?.message;
+      if (!message) return;
+      pendingAutoSendRef.current = message;
+      setIsOpen(true);
+    };
+
+    window.addEventListener("queryless:open", handleOpen);
+    return () => window.removeEventListener("queryless:open", handleOpen);
+  }, []);
 
   const enabled = enabledOverride ?? QUERYLESS_ENABLED;
 
@@ -421,6 +436,16 @@ export default function QuerylessAssistant() {
     if (isOpen) {
       document.body.classList.add("queryless-drawer-open");
       window.localStorage.setItem(QUERYLESS_OPEN_STORAGE_KEY, "true");
+      if (pendingAutoSendRef.current) {
+        const message = pendingAutoSendRef.current;
+        pendingAutoSendRef.current = null;
+        setInput(message);
+        // Let the input state settle before sending
+        setTimeout(() => {
+          setInput("");
+          void sendMessageWith(message);
+        }, 50);
+      }
       return;
     }
     document.body.classList.remove("queryless-drawer-open");
@@ -438,8 +463,7 @@ export default function QuerylessAssistant() {
     []
   );
 
-  const sendMessage = async () => {
-    const question = input.trim();
+  const sendMessageWith = async (question: string) => {
     if (!question || isSending) return;
     hasExchangeSinceLastPageChangeRef.current = true;
     const assistantMessageId = `assistant-${Date.now()}`;
@@ -463,7 +487,6 @@ export default function QuerylessAssistant() {
     ];
 
     setMessages(nextMessages);
-    setInput("");
     setIsSending(true);
     setError(null);
 
@@ -618,6 +641,12 @@ export default function QuerylessAssistant() {
     }
   };
 
+  const sendMessage = async () => {
+    const question = input.trim();
+    setInput("");
+    await sendMessageWith(question);
+  };
+
   if (!enabled) {
     return null;
   }
@@ -628,8 +657,7 @@ export default function QuerylessAssistant() {
       {
         id: "assistant-welcome",
         role: "assistant",
-        content:
-          "Hi, I’m Queryless 👋\n\nAsk questions in plain English. No SQL needed.\n\nTry things like:\n- “Are there any datasets about climate change?”\n- “What are the available groups?”\n- “Compare the top 10 by emissions.”\n- “Create a chart for this trend.”\n\nI’m aware of the page you are browsing 👀",
+        content: QUERYLESS_WELCOME_MESSAGE,
       },
       {
         id: contextMessageId,
@@ -648,7 +676,7 @@ export default function QuerylessAssistant() {
     <>
       <button
         type="button"
-        className="fixed bottom-6 right-6 z-[60] inline-flex items-center gap-2 rounded-full bg-sky-600 px-4 py-3 text-sm font-semibold text-white shadow-lg transition hover:bg-sky-700 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:ring-offset-2"
+        className="fixed bottom-6 right-6 z-[60] inline-flex items-center gap-2 rounded-full bg-accent px-4 py-3 text-sm font-semibold text-white shadow-lg transition hover:bg-accent-600 focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2"
         aria-label="Open AI assistant"
         onClick={() => setIsOpen(true)}
       >
@@ -734,7 +762,7 @@ export default function QuerylessAssistant() {
                                 : `${containsChartBlock ? "w-full max-w-full" : "max-w-[90%]"} rounded-2xl px-3 py-2 text-sm ${
                                     message.role === "assistant"
                                       ? "bg-slate-100 text-slate-800"
-                                      : "ml-auto bg-sky-600 text-white"
+                                      : "ml-auto bg-accent text-white"
                                   }`
                             }`}
                           >
@@ -751,9 +779,9 @@ export default function QuerylessAssistant() {
                       <div className="max-w-[90%] rounded-2xl bg-slate-100 px-3 py-2 text-sm text-slate-600">
                         <div className="flex items-center gap-2">
                           <span className="inline-flex items-center gap-1" aria-hidden="true">
-                            <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-sky-500 [animation-delay:-0.2s]" />
-                            <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-sky-500 [animation-delay:-0.1s]" />
-                            <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-sky-500" />
+                            <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-accent [animation-delay:-0.2s]" />
+                            <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-accent [animation-delay:-0.1s]" />
+                            <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-accent" />
                           </span>
                           <span>Thinking...</span>
                         </div>
@@ -778,13 +806,13 @@ export default function QuerylessAssistant() {
                           }
                         }}
                         placeholder="Ask about this page or your data..."
-                        className="flex-1 rounded-md border border-slate-300 px-3 py-2 text-sm outline-none focus:border-sky-500"
+                        className="flex-1 rounded-md border border-slate-300 px-3 py-2 text-sm outline-none focus:border-accent"
                       />
                       <button
                         type="button"
                         onClick={() => void sendMessage()}
                         disabled={isSending || !input.trim()}
-                        className="rounded-md bg-sky-600 px-3 py-2 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60"
+                        className="rounded-md bg-accent px-3 py-2 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60"
                       >
                         Send
                       </button>

@@ -1,12 +1,15 @@
 import nextSeoConfig, { imageUrl, siteTitle, url } from "@/next-seo.config";
 import { Dataset } from "@portaljs/ckan";
 import { BreadcrumbJsonLd, LogoJsonLd, NextSeo, DatasetJsonLd } from "next-seo";
+import { generateMockDoi } from "@/lib/doi";
+import { getDatasetStableUrl } from "@/lib/dataset-links";
 
 export function DatasetPageStructuredData({ dataset }: { dataset: Dataset }) {
   const title = dataset.title || dataset.name
   const ownerOrg = dataset?.organization?.name || "Organization"
-  const datasetUrl = `${url}/@${ownerOrg}/${dataset.name}`
+  const datasetUrl = getDatasetStableUrl(dataset, url)
   const description = dataset.notes || "Dataset page of " + title
+  const datasetDoi = generateMockDoi(dataset.name)
 
   return (
     <>
@@ -64,6 +67,7 @@ export function DatasetPageStructuredData({ dataset }: { dataset: Dataset }) {
         url={datasetUrl}
         name={title}
         description={description}
+        identifier={datasetDoi}
         creator={{
           '@type': 'Organization',
           name: ownerOrg,

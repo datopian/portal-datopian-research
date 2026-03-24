@@ -11,7 +11,7 @@ export default function LighterThemeHeader() {
   const router = useRouter();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { theme } = useTheme();
-  const portalLogo = process?.env?.NEXT_PUBLIC_PORTAL_LOGO;
+  const portalLogo = "/images/logos/MainLogo.svg";
 
   useEffect(() => {
     const handleRouteChange = () => {
@@ -25,54 +25,45 @@ export default function LighterThemeHeader() {
   }, [router.events]);
 
   return (
-    <header className="bg-transparent ">
+    <header className="bg-white border-b border-gray-100">
       <nav
         className={`mx-auto py-4 flex custom-container items-center justify-between  ${theme.styles.containerWide}`}
         aria-label="Global"
       >
-        <div className="flex items-center gap-x-12">
+        <div className="flex items-center">
           <span className="sr-only">Portal</span>
           {portalLogo ? (
             <Link href="/">
-              <Image src={portalLogo} alt="logo" height={55} width={55} />
+              <Image src={portalLogo} alt="logo" height={72} width={240} style={{ objectFit: "contain" }} />
             </Link>
           ) : (
             <PortalDefaultLogo />
           )}
-
-          <div className="hidden lg:flex lg:gap-x-12">
-            <div className="flex gap-x-8 align-center">
-              <Link
-                href="/search"
-                className={`font-semibold my-auto ${
-                  router.pathname === "/search" ? "text-accent" : ""
-                }`}
-              >
-                SEARCH
-              </Link>
-              <Link
-                href="/organizations"
-                className={`font-semibold my-auto ${
-                  router.pathname === "/organizations" ? "text-accent" : ""
-                }`}
-              >
-                ORGANIZATIONS
-              </Link>
-              <Link
-                href="/groups"
-                className={`font-semibold my-auto ${
-                  router.pathname === "/groups" ? "text-accent" : ""
-                }`}
-              >
-                GROUPS
-              </Link>
-            </div>
-          </div>
         </div>
+
+        <div className="hidden lg:flex lg:gap-x-8 items-center">
+          <Link
+            href="/search"
+            className={`text-sm font-medium ${
+              router.pathname === "/search" ? "text-accent" : "text-gray-500 hover:text-gray-900"
+            }`}
+          >
+            Datasets
+          </Link>
+          <Link
+            href="/stories"
+            className={`text-sm font-medium ${
+              router.pathname === "/stories" ? "text-accent" : "text-gray-500 hover:text-gray-900"
+            }`}
+          >
+            Reports
+          </Link>
+        </div>
+
         <div className="flex lg:hidden">
           <button
             type="button"
-            className="inline-flex items-center justify-center rounded-md p-2.5 text-gray-700 bg-white"
+            className="inline-flex items-center justify-center rounded-md p-2.5 text-gray-700"
             onClick={() => setMobileMenuOpen(true)}
           >
             <span className="sr-only">Open main menu</span>
@@ -92,10 +83,11 @@ export default function LighterThemeHeader() {
             <span className="sr-only">Datopian</span>
             <Link href="/" className="-m-1.5 p-1.5 inline-block md:hidden">
               <Image
-                src="/images/logos/logo.svg"
-                width={55}
-                height={55}
+                src={portalLogo}
+                width={180}
+                height={54}
                 alt="Portal"
+                style={{ objectFit: "contain" }}
               />
             </Link>
             <button
@@ -110,14 +102,11 @@ export default function LighterThemeHeader() {
           <div className="mt-6 flow-root">
             <div className="-my-6 divide-y divide-gray-500/10">
               <div className="space-y-2 py-6 flex flex-col">
-                <Link href="/search" className="font-semibold my-auto">
-                  DATASETS
+                <Link href="/search" className="text-sm font-medium text-gray-500">
+                  Datasets
                 </Link>
-                <Link href="/organizations" className="font-semibold my-auto">
-                  ORGS
-                </Link>
-                <Link href="/groups" className="font-semibold my-auto">
-                  GROUPS
+                <Link href="/stories" className="text-sm font-medium text-gray-500">
+                  Reports
                 </Link>
               </div>
             </div>

@@ -1,8 +1,12 @@
+import Image from "next/image";
 import SearchForm from "./SearchForm";
 
-
-import { RiBarChartLine, RiFileCopy2Line, RiFunctionLine, RiTeamLine } from "react-icons/ri";
-import { Stat } from "../heroSection/Stats";
+const SUGGESTED_PROMPTS = [
+  "Show datasets published in the last year",
+  "What climate datasets are available?",
+  "Find datasets about public health",
+  "Which organisations have the most datasets?",
+];
 
 export default function HeroSectionLight({
   stats,
@@ -14,53 +18,63 @@ export default function HeroSectionLight({
     visualizationCount: number;
   };
 }) {
-  return (
-    <div>
-      <div className="custom-container mx-auto bg-white">
-        <div className="flex flex-col lg:flex-row lg:items-center py-[30px] md:py-[80px] lg:py-[140px] gap-10 lg:gap-0">
-          <div className="lg:max-w-[478px]">
-            <h1 className="font-black text-[40px] md:text-[55px] flex flex-col leading-[50px] md:leading-[65px]">
-              <span>Find and Share</span>
-              <span className="text-accent">Quality Data.</span>
-            </h1>
-            <p className="text-[16px] md:text-[20px] text-[var(--text-gray)] mt-[10px] mb-[30px]">
-              At Portal, we have over thousands of datasets for free and a
-              Premium Data Service for additional or customised data with
-              guaranteed updates.
-            </p>
+  const handlePrompt = (prompt: string) => {
+    window.dispatchEvent(new CustomEvent("queryless:open", { detail: { message: prompt } }));
+  };
 
-            <SearchForm />
-          </div>
-          <div
-            className={`lg:ml-auto lg:pr-[135px] flex lg:flex-col justify-start gap-[40px] flex-wrap `}
-          >
-            <Stat
-              Icon={RiFileCopy2Line}
-              href="/search"
-              count={stats.datasetCount}
-              label="Dataset"
-            />
-            {!!stats.visualizationCount && <Stat
-              Icon={RiBarChartLine}
-              href="/search?type=visualization"
-              count={stats.visualizationCount}
-              label="Visualization"
-            />}
-            <Stat
-              Icon={RiFunctionLine}
-              href="/groups"
-              count={stats.groupCount}
-              label="Group"
-            />
-            <Stat
-              Icon={RiTeamLine}
-              href="/organizations"
-              count={stats.orgCount}
-              label="Organization"
-            />
-          </div>
+  return (
+    <section
+      className="h-[calc(100vh-100px)] flex flex-col px-4 hero-glow"
+    >
+      <div className="flex-1 flex flex-col items-center justify-center text-center gap-6 w-full max-w-3xl mx-auto">
+        <Image
+          src="/images/logos/MainLogoSymbol.svg"
+          alt="PortalJS Research Data Portal"
+          width={96}
+          height={96}
+          style={{ objectFit: "contain" }}
+          priority
+        />
+
+        <div className="flex flex-col gap-3">
+          <h1 className="font-black text-[42px] md:text-[58px] leading-tight text-gray-900">
+            Research Data{" "}
+            <span className="text-accent">Intelligence</span>
+          </h1>
+          <p className="text-gray-500 text-[17px] md:text-[19px] max-w-xl mx-auto">
+            Explore academic and scientific datasets.
+            Ask anything in plain English.
+          </p>
+        </div>
+
+        <div className="w-full">
+          <SearchForm />
+        </div>
+
+        <div className="flex flex-wrap gap-2 justify-center">
+          {SUGGESTED_PROMPTS.map((prompt) => (
+            <button
+              key={prompt}
+              onClick={() => handlePrompt(prompt)}
+              className="text-sm px-4 py-2 rounded-full border border-gray-200 text-gray-500 hover:border-accent hover:text-accent transition-colors bg-white"
+            >
+              {prompt}
+            </button>
+          ))}
         </div>
       </div>
-    </div>
+
+      {/* Portal stats pinned to the bottom */}
+      <div className="mt-auto w-full">
+        <div className="custom-container mx-auto py-5 flex flex-wrap gap-8 justify-center">
+          <span className="text-sm text-gray-500"><span className="font-bold text-gray-900 text-base">{stats.datasetCount}</span> Datasets</span>
+          <span className="text-sm text-gray-500"><span className="font-bold text-gray-900 text-base">{stats.orgCount}</span> Organizations</span>
+          <span className="text-sm text-gray-500"><span className="font-bold text-gray-900 text-base">{stats.groupCount}</span> Topics</span>
+          {!!stats.visualizationCount && (
+            <span className="text-sm text-gray-500"><span className="font-bold text-gray-900 text-base">{stats.visualizationCount}</span> Visualizations</span>
+          )}
+        </div>
+      </div>
+    </section>
   );
 }

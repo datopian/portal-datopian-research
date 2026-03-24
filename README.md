@@ -85,6 +85,33 @@ QUERYLESS_MODEL=agent:your-agent-id
 
 5) Access `http://localhost:3000` in your browser
 
+### Import curated DataHub datasets
+
+This repo includes a reusable importer for a curated DataHub demo pack targeted at
+`@datopian-research`.
+
+Dry run:
+
+```bash
+npm run import:datahub-demo:dry-run
+```
+
+Apply changes after setting a CKAN API key:
+
+```bash
+CKAN_API_KEY=your-key-here npm run import:datahub-demo
+```
+
+Import a subset by dataset slug:
+
+```bash
+CKAN_API_KEY=your-key-here node scripts/import-datahub-demo.mjs --apply --dataset global-surface-temperature,life-expectancy-at-birth
+```
+
+The importer fetches `datapackage.json` from DataHub, applies local metadata overrides
+from `scripts/datahub-demo-manifest.mjs`, ensures groups exist, and then upserts datasets,
+tags, and resources into `@datopian-research`.
+
 ## Customization
 
 This template was developed with Next.js/React and TailwindCSS.
