@@ -2,13 +2,13 @@ import { FormEvent, useState, useEffect, useRef } from "react";
 import { MagnifyingGlassIcon } from "@heroicons/react/20/solid";
 
 const PLACEHOLDERS = [
-  "List climate data sources covering emissions...",
-  "What climate datasets are available?",
-  "Find public health data that shows outbreaks by district...",
-  "Show me open science data on research funding...",
-  "List socioeconomic data with population projections...",
-  "Give me genomic data sources with cost benchmarks...",
-  "Show datasets that track energy transition indicators...",
+  "How have global surface temperature anomalies trended since 1880?",
+  "What is the latest rise in atmospheric CO2 ppm recorded at Mauna Loa?",
+  "How do national fossil CO2 emissions compare for the past five years?",
+  "What is the incidence rate of COVID-19 per 100k in Finnish healthcare districts?",
+  "Show projected global population growth through 2100.",
+  "How has spending on pharmaceuticals shifted over the last five years?",
+  "What is the historical cost trend for genome sequencing per megabase?",
 ];
 
 const TYPING_SPEED = 45;

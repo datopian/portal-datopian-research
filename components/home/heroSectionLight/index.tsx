@@ -2,10 +2,10 @@ import Image from "next/image";
 import SearchForm from "./SearchForm";
 
 const SUGGESTED_PROMPTS = [
-  "List climate data about renewable energy targets",
-  "What climate datasets are available?",
-  "Find public health data with district detail",
-  "Show datasets tracking energy transition indicators",
+  "How have global temperatures changed since 1900?",
+  "Compare atmospheric CO2 measurements this decade",
+  "Show Finland COVID-19 incidence per district",
+  "Compare pharma spending trends across countries",
 ];
 
 export default function HeroSectionLight({
