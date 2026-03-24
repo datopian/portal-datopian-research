@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="120" height="120" viewBox="0 0 120 120">
+  <defs>
+    <linearGradient id="grad-climate" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1595c3" />
+      <stop offset="100%" stop-color="#2bc0e4" />
+    </linearGradient>
+  </defs>
+  <rect width="120" height="120" rx="24" fill="url(#grad-climate)" />
+  <path d="M35 75 Q45 55 60 55 Q75 55 85 35" stroke="#fff" stroke-width="6" fill="none" stroke-linecap="round" />
+  <circle cx="90" cy="40" r="10" fill="#fff" opacity="0.6" />
+  <circle cx="40" cy="50" r="6" fill="#fff" opacity="0.6" />
+</svg>

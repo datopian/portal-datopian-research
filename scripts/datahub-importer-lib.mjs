@@ -81,6 +81,7 @@ export function buildGroupPayloads(manifest) {
       title: group.name,
       display_name: group.name,
       description: group.description || "",
+      image_display_url: group.image_display_url,
     });
   }
 

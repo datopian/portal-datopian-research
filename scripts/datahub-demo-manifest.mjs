@@ -1,3 +1,6 @@
+const ICON_BASE_URL =
+  "https://raw.githubusercontent.com/datopian/portal-datopian-research/main/public/images/topics";
+
 export const DATAHUB_DEMO_MANIFEST = {
   ownerOrg: "datopian-research",
   defaults: {
@@ -15,26 +18,32 @@ export const DATAHUB_DEMO_MANIFEST = {
     {
       name: "Climate Change",
       description: "Climate indicators and long-run environmental change datasets.",
+      image_display_url: `${ICON_BASE_URL}/climate-change.svg`,
     },
     {
       name: "Demographics",
       description: "Population, fertility, and demographic trend datasets.",
+      image_display_url: `${ICON_BASE_URL}/demographics.svg`,
     },
     {
       name: "Public Health",
       description: "Health outcomes and global wellbeing indicators.",
+      image_display_url: `${ICON_BASE_URL}/public-health.svg`,
     },
     {
       name: "Economics",
       description: "Macro-economic and labor-market indicators.",
+      image_display_url: `${ICON_BASE_URL}/economics.svg`,
     },
     {
       name: "Energy",
       description: "Energy production, imports, and transition-related datasets.",
+      image_display_url: `${ICON_BASE_URL}/energy.svg`,
     },
     {
       name: "Research and Innovation",
       description: "Datasets about research systems, knowledge production, and innovation.",
+      image_display_url: `${ICON_BASE_URL}/research-innovation.svg`,
     },
   ],
   datasets: [
