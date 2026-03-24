@@ -2,13 +2,13 @@ import { FormEvent, useState, useEffect, useRef } from "react";
 import { MagnifyingGlassIcon } from "@heroicons/react/20/solid";
 
 const PLACEHOLDERS = [
-  "List datasets about renewable energy targets...",
+  "List climate data sources covering emissions...",
   "What climate datasets are available?",
-  "Find datasets about public health...",
-  "Show me open science data...",
-  "What research datasets can I explore?",
-  "List datasets with population projections...",
-  "Give me genomic data sources...",
+  "Find public health data that shows outbreaks by district...",
+  "Show me open science data on research funding...",
+  "List socioeconomic data with population projections...",
+  "Give me genomic data sources with cost benchmarks...",
+  "Show datasets that track energy transition indicators...",
 ];
 
 const TYPING_SPEED = 45;
