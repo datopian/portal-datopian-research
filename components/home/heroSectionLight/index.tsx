@@ -2,10 +2,10 @@ import Image from "next/image";
 import SearchForm from "./SearchForm";
 
 const SUGGESTED_PROMPTS = [
-  "Show datasets published in the last year",
+  "List datasets about renewable energy targets",
   "What climate datasets are available?",
   "Find datasets about public health",
-  "Which organisations have the most datasets?",
+  "List datasets with population projections",
 ];
 
 export default function HeroSectionLight({
