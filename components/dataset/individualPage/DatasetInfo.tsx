@@ -446,11 +446,11 @@ export default function DatasetInfo({
                 href={datasetDoiUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-accent hover:text-darkaccent inline items-center gap-1 break-all transition"
+                className="text-accent hover:text-darkaccent block w-full break-all transition"
               >
                 
                 <span className="underline">{datasetDoi}</span>
-                <RiExternalLinkLine className="w-4 h-4 flex-shrink-0" />
+                <RiExternalLinkLine className="w-4 h-4 flex-shrink-0 inline ml-1 relative bottom-0.5" />
               </a>
             </div>
           </div>
@@ -481,11 +481,11 @@ export default function DatasetInfo({
                       href={url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-accent hover:text-darkaccent inline items-center gap-1 break-all transition"
+                      className="text-accent hover:text-darkaccent block w-full break-all transition"
                     >
                       
                       <span className="underline">{url}</span>
-                      <RiExternalLinkLine className="w-4 h-4 flex-shrink-0" />
+                      <RiExternalLinkLine className="w-4 h-4 flex-shrink-0 inline ml-1 relative bottom-0.5" />
                     </a>
                   ))}
                 </div>
@@ -517,11 +517,11 @@ export default function DatasetInfo({
                     href={dataset.license_url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-accent hover:text-darkaccent inline items-center gap-1 break-all transition"
+                    className="text-accent hover:text-darkaccent block w-full break-all transition"
                   >
                     
                     <span className="underline">{datasetLicense}</span>
-                    <RiExternalLinkLine className="w-4 h-4 flex-shrink-0" />
+                    <RiExternalLinkLine className="w-4 h-4 flex-shrink-0 inline ml-1 relative bottom-0.5" />
                   </a>
                 ) : (
                   <span>{datasetLicense}</span>
