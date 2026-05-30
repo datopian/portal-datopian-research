@@ -446,7 +446,7 @@ export default function DatasetInfo({
                 href={datasetDoiUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-accent hover:text-darkaccent flex items-center gap-1 break-all transition"
+                className="text-accent hover:text-darkaccent inline items-center gap-1 break-all transition"
               >
                 
                 <span className="underline">{datasetDoi}</span>
@@ -481,7 +481,7 @@ export default function DatasetInfo({
                       href={url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-accent hover:text-darkaccent flex items-center gap-1 break-all transition"
+                      className="text-accent hover:text-darkaccent inline items-center gap-1 break-all transition"
                     >
                       
                       <span className="underline">{url}</span>
@@ -517,7 +517,7 @@ export default function DatasetInfo({
                     href={dataset.license_url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-accent hover:text-darkaccent flex items-center gap-1 break-all transition"
+                    className="text-accent hover:text-darkaccent inline items-center gap-1 break-all transition"
                   >
                     
                     <span className="underline">{datasetLicense}</span>
