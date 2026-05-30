@@ -448,8 +448,9 @@ export default function DatasetInfo({
                 rel="noopener noreferrer"
                 className="text-accent hover:text-darkaccent flex items-center gap-1 break-all transition"
               >
-                <RiExternalLinkLine className="w-4 h-4 flex-shrink-0" />
+                
                 <span className="underline">{datasetDoi}</span>
+                <RiExternalLinkLine className="w-4 h-4 flex-shrink-0" />
               </a>
             </div>
           </div>
@@ -482,8 +483,9 @@ export default function DatasetInfo({
                       rel="noopener noreferrer"
                       className="text-accent hover:text-darkaccent flex items-center gap-1 break-all transition"
                     >
-                      <RiExternalLinkLine className="w-4 h-4 flex-shrink-0" />
+                      
                       <span className="underline">{url}</span>
+                      <RiExternalLinkLine className="w-4 h-4 flex-shrink-0" />
                     </a>
                   ))}
                 </div>
@@ -517,8 +519,9 @@ export default function DatasetInfo({
                     rel="noopener noreferrer"
                     className="text-accent hover:text-darkaccent flex items-center gap-1 break-all transition"
                   >
-                    <RiExternalLinkLine className="w-4 h-4 flex-shrink-0" />
+                    
                     <span className="underline">{datasetLicense}</span>
+                    <RiExternalLinkLine className="w-4 h-4 flex-shrink-0" />
                   </a>
                 ) : (
                   <span>{datasetLicense}</span>
