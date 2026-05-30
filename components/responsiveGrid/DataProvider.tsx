@@ -132,7 +132,8 @@ export const DataStateProvider = ({
       setData(parsedData.data);
       setVisibleColumns(Object.keys(parsedData.data[0] || {}));
     } catch (err) {
-      throw new Error(err.message);
+      console.log(new Error(err.message));
+      
       //setError(err.message); // Handle errors (e.g., network issues)
       // setLoading(false);
     }
