@@ -72,7 +72,7 @@ export async function getServerSideProps() {
     orgs: [],
     resFormat: [],
     query: "",
-    sort: "score desc",
+    sort: "metadata_modified desc",
     type: "dataset",
   };
 
